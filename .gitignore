@@ -1,1 +1,22 @@
-*.x
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtualenvs
+.venv/
+venv/
+
+# Poetry
+poetry.toml
+
+# Build artifacts
+dist/
+build/
+*.egg-info/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS
+.DS_Store

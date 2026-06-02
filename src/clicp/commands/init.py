@@ -5,4 +5,4 @@ def init():
     createDataDir()
     initializeDataBase()
 
-    print("clicp inicilizado")
+    print("clicp started")

@@ -1,4 +1,5 @@
 from pathlib import Path
+from clicp.commands import add
 import sqlite3
 
 DATA_DIR = Path.home() / ".local" / "share" / "clicp"
@@ -102,3 +103,14 @@ def deleteData():
 
     if DB_PATH.exists():
         DB_PATH.unlink()
+
+def addProblem(name, rating=None, contest_id=None):
+    conn = getConnection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+       INSERT INTO Problem(id, name, rating, contest_id) VALUES (?, ?, ?);            
+    """)
+
+    conn.commit()
+    conn.close()

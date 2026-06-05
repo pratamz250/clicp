@@ -1,2 +1,9 @@
+from clicp.database import addProblem
+
 def add():
-    print("Add")
+    
+    entrace = input()
+
+    parts = entrace.split(" ")
+
+    addProblem(parts[0], parts[1], parts[2])

@@ -91,3 +91,14 @@ def initializeDataBase():
 
     conn.commit()
     conn.close()
+
+def deleteData():
+    print("Are you shure you want to delete all data? This can't be undone. [Y/n]", end=' ')
+    op = input()
+
+    if op.lower() != "y":
+        print("Operation canceled.")
+        return
+
+    if DB_PATH.exists():
+        DB_PATH.unlink()

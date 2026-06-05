@@ -1,9 +1,25 @@
-from clicp.database import addProblem
+import typer
+from clicp.database import add_problem_db
 
-def add():
+def add_problem_cli(
+        name: str,
+        platform_name: str | None = typer.Option(
+            ...,
+            "--platform",
+            help="Platform name"
+        ),
+        rating: int | None = typer.Option(
+            None,
+            "--rating"
+        ),
+        contest_name: str | None = typer.Option(
+            None,
+            "--contest"
+        )
+        ):
     
-    entrace = input()
-
-    parts = entrace.split(" ")
-
-    addProblem(parts[0], parts[1], parts[2])
+    try:
+        add_problem_db(name, platform_name, rating, contest_name)
+        print("Problem added.")
+    except ValueError as e:
+        print(e)

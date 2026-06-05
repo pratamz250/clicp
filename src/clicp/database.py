@@ -1,29 +1,45 @@
 from pathlib import Path
-from clicp.commands import add
 import sqlite3
 
 DATA_DIR = Path.home() / ".local" / "share" / "clicp"
 DB_PATH = DATA_DIR / "clicp.db"
 
-def createDataDir():
+def create_data_dir():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-def getConnection():
-    return sqlite3.connect(DB_PATH)
+def get_connection():
+    create_data_dir()
 
-def initializeDataBase():
-    conn = getConnection()
+    conn = sqlite3.connect(DB_PATH)
+    conn.execute("PRAGMA foreign_keys = ON")
+
+    return conn
+
+def initialize_data_base():
+    conn = get_connection()
     cursor = conn.cursor()
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Platform(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            name TEXT NOT NULL,
+
+            UNIQUE(name)           
+        )
+    """)
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Contest(
             id INTEGER PRIMARY KEY AUTOINCREMENT,
                    
             name TEXT NOT NULL,
-            platform TEXT NOT NULL,
             date TEXT,
+            platform_id INTEGER NOT NULL,
                    
-            UNIQUE(name, platform)
+            UNIQUE(name, platform_id),
+                   
+            FOREIGN KEY(platform_id) REFERENCES Platform(id)
         )
     """)
 
@@ -32,10 +48,14 @@ def initializeDataBase():
             id INTEGER PRIMARY KEY AUTOINCREMENT,
                    
             name TEXT NOT NULL,   
-            rating INTEGER,
+            rating INTEGER CHECK(rating >= 0),
             contest_id INTEGER,
+            platform_id INTEGER NOT NULL,
                    
-            FOREIGN KEY(contest_id) REFERENCES Contest(id)
+            UNIQUE(name, platform_id),
+
+            FOREIGN KEY(contest_id) REFERENCES Contest(id),
+            FOREIGN KEY(platform_id) REFERENCES Platform(id)
         )            
     """)
 
@@ -45,20 +65,20 @@ def initializeDataBase():
                    
             comment TEXT,
             attempted_at TEXT NOT NULL,
-            time_until_idea INTEGER,
-            total_time INTEGER,
+            time_until_idea INTEGER CHECK(time_until_idea >= 0),
+            total_time INTEGER CHECK(total_time >= 0),
             problem_id INTEGER NOT NULL,
                    
-            resultType TEXT CHECK(
-                resultType IN(
+            result_type TEXT CHECK(
+                result_type IN(
                     'solved',
                     'solved_with_help',
                     'unsolved'
                 )       
             ),
                    
-            errorType TEXT CHECK(
-                errorType IN(
+            error_type TEXT CHECK(
+                error_type IN(
                     'no_idea',
                     'incomplete_idea',
                     'implementation',
@@ -66,7 +86,7 @@ def initializeDataBase():
                 )       
             ),
                    
-            FOREIGN KEY(problem_id) REFERENCES Problem(id)
+            FOREIGN KEY(problem_id) REFERENCES Problem(id) ON DELETE CASCADE
         )            
     """)
 
@@ -85,32 +105,89 @@ def initializeDataBase():
                    
             PRIMARY KEY(problem_id, tag_id),
                    
-            FOREIGN KEY(problem_id) REFERENCES Problem(id),
-            FOREIGN KEY(tag_id) REFERENCES Tag(id)
+            FOREIGN KEY(problem_id) REFERENCES Problem(id) ON DELETE CASCADE,
+            FOREIGN KEY(tag_id) REFERENCES Tag(id) ON DELETE CASCADE
         )            
     """)
 
     conn.commit()
     conn.close()
 
-def deleteData():
-    print("Are you shure you want to delete all data? This can't be undone. [Y/n]", end=' ')
+def delete_data():
+    print("Are you sure you want to delete all data? This can't be undone. [Y/n]", end=' ')
     op = input()
 
     if op.lower() != "y":
         print("Operation canceled.")
         return
-
-    if DB_PATH.exists():
+    elif DB_PATH.exists():
         DB_PATH.unlink()
 
-def addProblem(name, rating=None, contest_id=None):
-    conn = getConnection()
+def add_problem_db(
+        name: str, 
+        platform_name: str,
+        rating: int | None = None, 
+        contest_name: str | None = None
+        ):
+    conn = get_connection()
     cursor = conn.cursor()
 
+    #Get platform id
     cursor.execute("""
-       INSERT INTO Problem(id, name, rating, contest_id) VALUES (?, ?, ?);            
-    """)
+        SELECT Platform.id
+        FROM Platform     
+        WHERE Platform.name == ?;
+    """, (platform_name,))
+
+    result = cursor.fetchone()
+
+    if result is None:
+        conn.close()
+        raise ValueError(f"Platform {platform_name} not found.")
+
+    platform_id = result[0]
+
+    #Check if user want to add a problem with a contest and get it's id
+    contest_id = None
+
+    if contest_name is not None:
+        cursor.execute("""
+            SELECT Contest.id
+            FROM Contest
+            WHERE Contest.name == ? AND Contest.platform_id = ?;
+        """, (contest_name, platform_id))
+
+        result = cursor.fetchone()
+
+        if result is None:
+            conn.close()
+            raise ValueError(f"Contest {contest_name} not found.")
+
+        contest_id = result[0]
+
+    #Executes problem insertion
+    cursor.execute("""
+        INSERT INTO Problem(name, rating, contest_id, platform_id) 
+        VALUES (?, ?, ?, ?);            
+    """, (name, rating, contest_id, platform_id))
 
     conn.commit()
     conn.close()
+
+def add_platform_db(name):
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("""
+            INSERT INTO Platform(name)
+            VALUES (?)            
+        """, (name,))
+
+        conn.commit()
+    
+    except sqlite3.IntegrityError:
+        raise ValueError(f"Platform {name} already exists.")
+
+    finally:
+        conn.close()

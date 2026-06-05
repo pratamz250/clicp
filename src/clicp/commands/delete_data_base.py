@@ -1,6 +1,6 @@
-from clicp.database import deleteData
+from clicp.database import delete_data
 
 def reset():
-    deleteData()
+    delete_data()
 
     print("Database deleted.")

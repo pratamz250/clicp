@@ -1,8 +1,8 @@
-from clicp.database import createDataDir
-from clicp.database import initializeDataBase
+from clicp.database import create_data_dir
+from clicp.database import initialize_data_base
 
 def init():
-    createDataDir()
-    initializeDataBase()
+    create_data_dir()
+    initialize_data_base()
 
-    print("clicp started")
+    print("clicp started.")

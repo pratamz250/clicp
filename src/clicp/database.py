@@ -1,5 +1,6 @@
 from pathlib import Path
 import sqlite3
+import typer
 
 DATA_DIR = Path.home() / ".local" / "share" / "clicp"
 DB_PATH = DATA_DIR / "clicp.db"
@@ -114,14 +115,17 @@ def initialize_data_base():
     conn.close()
 
 def delete_data():
-    print("Are you sure you want to delete all data? This can't be undone. [Y/n]", end=' ')
-    op = input()
+    confirm = typer.confirm(
+        "Are you sure you want to delete all data? This can't be undone.",
+        default=True
+    )
 
-    if op.lower() != "y":
-        print("Operation canceled.")
-        return
+    if not confirm:
+        typer.echo("Operation canceled.")
+        return 
     elif DB_PATH.exists():
         DB_PATH.unlink()
+        print("Database deleted.")
 
 def add_problem_db(
         name: str, 

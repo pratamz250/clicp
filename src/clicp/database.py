@@ -195,3 +195,8 @@ def add_platform_db(name):
 
     finally:
         conn.close()
+
+def add_contest_db(
+        name: str,
+        date: 
+)

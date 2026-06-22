@@ -6,15 +6,20 @@ def add_problem_cli(
         platform_name: str | None = typer.Option(
             ...,
             "--platform",
+            "--pl",
             help="Platform name"
         ),
         rating: int | None = typer.Option(
             None,
-            "--rating"
+            "--rating",
+            "--r",
+            help="Problem rating"
         ),
         contest_name: str | None = typer.Option(
             None,
-            "--contest"
+            "--contest",
+            "--con",
+            help="Contest name"
         )
         ):
     

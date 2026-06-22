@@ -1,21 +1,24 @@
 [tool.poetry]
-
-packages = [{include = "src"}]
+packages = [
+    { include = "clicp", from = "src" }
+]
 
 [project]
 name = "clicp"
 version = "0.1.0"
-description = ""
+description = "Competitive programming CLI"
 authors = [
-    {name = "IsaacMPereira",email = "isaacp.menezesp@gmail.com"}
+    {name = "pratamz250", email = "isaacp.menezesp@gmail.com"}
 ]
 readme = "README.md"
-requires-python = ">=3.13"
-dependencies = ["typer (>=0.25.1,<0.26.0)"]
+requires-python = ">=3.10"
+dependencies = [
+    "typer>=0.25.1,<0.26.0"
+]
+
+[project.scripts]
+clicp = "clicp.cli:main"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.poetry.scripts]
-clicp = "clicp.cli:main"
